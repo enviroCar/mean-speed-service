@@ -1,0 +1,13 @@
+
+
+kafka:
+  group:
+    id: mean-speed
+  client:
+    id: mean-speed
+  bootstrap:
+    servers: https://processing.envirocar.org:9092
+
+trackcount:
+  mapMatching:
+    url: https://processing.envirocar.org/
