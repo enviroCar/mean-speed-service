@@ -4,7 +4,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Random;
 
-import org.envirocar.trackcount.database.PostgreSQLDatabase;
+import org.envirocar.meanspeed.database.PostgreSQLDatabase;
 import org.junit.Test;
 
 public class DatabaseTest {

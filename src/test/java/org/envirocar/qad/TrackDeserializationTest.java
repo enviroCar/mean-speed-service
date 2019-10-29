@@ -7,11 +7,11 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
-import org.envirocar.trackcount.configuration.JacksonConfiguration;
-import org.envirocar.trackcount.configuration.JtsConfiguration;
-import org.envirocar.trackcount.configuration.KafkaConfiguration;
-import org.envirocar.trackcount.kafka.KafkaJsonDeserializer;
-import org.envirocar.trackcount.model.FeatureCollection;
+import org.envirocar.meanspeed.configuration.JacksonConfiguration;
+import org.envirocar.meanspeed.configuration.JtsConfiguration;
+import org.envirocar.meanspeed.configuration.KafkaConfiguration;
+import org.envirocar.meanspeed.kafka.KafkaJsonDeserializer;
+import org.envirocar.meanspeed.model.FeatureCollection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.n52.jackson.datatype.jts.JtsModule;

@@ -4,8 +4,8 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
-import org.envirocar.trackcount.mapmatching.MapMatchingResult;
-import org.envirocar.trackcount.service.TrackCountService;
+import org.envirocar.meanspeed.mapmatching.MapMatchingResult;
+import org.envirocar.meanspeed.service.MeanSpeedService;
 import org.junit.Test;
 import org.n52.jackson.datatype.jts.JtsModule;
 
@@ -17,7 +17,7 @@ public class TrackCountServiceTest {
 	@Test
 	public void testTrackOcuntService() {
 		
-		TrackCountService trackCountService = new TrackCountService();
+		MeanSpeedService trackCountService = new MeanSpeedService();
 		
 		MapMatchingResult matchedTrack = null;
 		try {			
