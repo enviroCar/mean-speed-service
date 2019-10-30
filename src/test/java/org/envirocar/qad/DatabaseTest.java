@@ -20,35 +20,35 @@ public class DatabaseTest {
 			osmID = osmID * -1;
 		}
 		
-		int count = database.getTrackCount(osmID);
-				
-		assertTrue(count == -1);
-		
-		boolean success = database.insertTrackCount(osmID, 1);
-		
-//		assertTrue(success);
-		
-		success = database.updateTrackCount(osmID, 2);
-		
-//		assertTrue(success);
-		
-		count = database.getTrackCount(osmID);
-		
-		assertTrue(count == 2);
-		
-		osmID = new Random().nextInt();
-		
-		database.increaseTrackCount(osmID);
-		
-		count = database.getTrackCount(osmID);
-		
-		assertTrue(count == 1);
-		
-		database.increaseTrackCount(osmID);
-		
-		count = database.getTrackCount(osmID);
-		
-		assertTrue(count == 2);
+//		int count = database.getSegmentMetadata(osmID);
+//				
+//		assertTrue(count == -1);
+//		
+//		boolean success = database.insertSegmentMetadata(osmID, 1);
+//		
+////		assertTrue(success);
+//		
+//		success = database.updateSegmentMetadata(osmID, 2);
+//		
+////		assertTrue(success);
+//		
+//		count = database.getSegmentMetadata(osmID);
+//		
+//		assertTrue(count == 2);
+//		
+//		osmID = new Random().nextInt();
+//		
+//		database.increaseSegmentMetadata(osmID);
+//		
+//		count = database.getSegmentMetadata(osmID);
+//		
+//		assertTrue(count == 1);
+//		
+//		database.increaseSegmentMetadata(osmID);
+//		
+//		count = database.getSegmentMetadata(osmID);
+//		
+//		assertTrue(count == 2);
 		
 	}
 	

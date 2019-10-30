@@ -16,26 +16,34 @@ import org.slf4j.LoggerFactory;
 public class PostgreSQLDatabase {
 	
     private static final Logger LOG = LoggerFactory.getLogger(PostgreSQLDatabase.class);
-
+    
+    private static final String TABLE_NAME = "SEGMENT_METADATA";
+    private static final String COLUMN_NAME_COUNT = "COUNT";
+    private static final String COLUMN_NAME_MEAN_SPEED = "MEAN_SPEED";
+    private static final String COLUMN_NAME_ACCUMULATED_SPEED = "ACCUMULATED_SPEED";
+    private static final String COLUMN_NAME_OSM_ID = "OSM_ID";
+    
     private static String connectionURL = null;	
     private static Connection conn = null;
 
     /** SQL to insert a response into the database */
-    public static final String insertionString = "INSERT INTO COUNT VALUES (?, ?)";
+    public static final String insertionString = "INSERT INTO " + TABLE_NAME + " VALUES (?, ?, ?, ?)";
 
     /** SQL to update a response, that was already stored in the database */
-    public static final String updateString = "UPDATE COUNT SET COUNT = (?) WHERE OSM_ID = (?)";
+    public static final String updateString = "UPDATE " + TABLE_NAME + " SET " + COLUMN_NAME_COUNT + " = (?), " + COLUMN_NAME_MEAN_SPEED + " = (?), " + COLUMN_NAME_ACCUMULATED_SPEED + " = (?) " + " WHERE " + COLUMN_NAME_OSM_ID + " = (?)";
 
     /** SQL to retrieve a response from the database */
-    public static final String selectionString = "SELECT COUNT FROM COUNT WHERE OSM_ID = (?)";
+    public static final String selectionString = "SELECT " + COLUMN_NAME_COUNT +  ", " + COLUMN_NAME_MEAN_SPEED +   ", " + COLUMN_NAME_ACCUMULATED_SPEED + " FROM " + TABLE_NAME + " WHERE " + COLUMN_NAME_OSM_ID + " = (?)";
 
     protected static PreparedStatement insertSQL = null;
     protected static PreparedStatement updateSQL = null;
     protected static PreparedStatement selectSQL = null;
     
-    public static final String pgCreationString = "CREATE TABLE COUNT ("
-            + "OSM_ID INTEGER NOT NULL PRIMARY KEY, "
-            + "COUNT SMALLINT)";
+    public static final String pgCreationString = "CREATE TABLE " + TABLE_NAME + " ("
+    		+ COLUMN_NAME_OSM_ID + " INTEGER NOT NULL PRIMARY KEY, "
+            + COLUMN_NAME_COUNT + " SMALLINT, "
+            + COLUMN_NAME_MEAN_SPEED + " DOUBLE PRECISION,"
+            + COLUMN_NAME_ACCUMULATED_SPEED + " DOUBLE PRECISION)";
     
     public PostgreSQLDatabase() {
     	
@@ -63,7 +71,7 @@ public class PostgreSQLDatabase {
             	LOG.error("Could not connect to database.");
             }
             
-            if(!createCountTable()) {
+            if(!createTable()) {
             	LOG.error("Could not create count table.");
             }
             
@@ -94,13 +102,13 @@ public class PostgreSQLDatabase {
 		return true;
 	}
 
-    private boolean createCountTable() {
+    private boolean createTable() {
         try {
             ResultSet rs;
             DatabaseMetaData meta = PostgreSQLDatabase.conn.getMetaData();
-            rs = meta.getTables(null, null, "count", new String[]{"TABLE"});
+            rs = meta.getTables(null, null, TABLE_NAME.toLowerCase(), new String[]{"TABLE"});
             if (!rs.next()) {
-                LOG.info("Table COUNT does not yet exist.");
+                LOG.info(String.format("Table %s does not yet exist.", TABLE_NAME));
                 Statement st = PostgreSQLDatabase.conn.createStatement();
                 st.executeUpdate(PostgreSQLDatabase.pgCreationString);
 
@@ -108,14 +116,17 @@ public class PostgreSQLDatabase {
 
                 meta = PostgreSQLDatabase.conn.getMetaData();
 
-                rs = meta.getTables(null, null, "count", new String[]{"TABLE"});
+                rs = meta.getTables(null, null, TABLE_NAME.toLowerCase(), new String[]{"TABLE"});
                 if (rs.next()) {
-                    LOG.info("Succesfully created table COUNT.");
+                    LOG.info(String.format("Succesfully created table %s.", TABLE_NAME));
                 } else {
-                    LOG.error("Could not create table COUNT.");
+                    LOG.error(String.format("Could not create table %s.", TABLE_NAME));
                     return false;
                 }
+            } else {
+                LOG.info(String.format("Table %s does exist.", TABLE_NAME));
             }
+            
         } catch (SQLException e) {
             LOG.error("Connection to the Postgres database failed: " + e.getMessage());
             return false;
@@ -158,25 +169,38 @@ public class PostgreSQLDatabase {
         return true;
     }
     
-    public void increaseTrackCount(long osmId) {
+    private double calculateMeanSpeed(double accumulatedSpeed, int count) {
+		
+		return accumulatedSpeed / count;
+	}
+    
+    public void updateSegmentMetadata(long osmId, double speed) {
     	
-    	int trackCount = getTrackCount(osmId);
+    	SegmentMetadata segmentMetadata = getSegmentMetadata(osmId);
     	
-    	if (trackCount == -1) {
+    	if (segmentMetadata == null) {
     		
-    		insertTrackCount(osmId, 1);
+    		insertSegmentMetadata(osmId, 1, speed, speed);
     		
     	} else {
     		
-    		trackCount++;
+    		int count = segmentMetadata.getCount();
     		
-    		updateTrackCount(osmId, trackCount);
+    		count++;
+    		
+    		double accumulatedSpeed = segmentMetadata.getAccumulatedSpeed();
+    		
+    		accumulatedSpeed = accumulatedSpeed + speed;
+    		
+			double newMeanSpeed = calculateMeanSpeed(accumulatedSpeed, count);
+    		
+    		updateSegmentMetadata(osmId, count, newMeanSpeed, accumulatedSpeed);
     	}    	
     }
-    
-    public int getTrackCount(Long osmId) {
+
+	public SegmentMetadata getSegmentMetadata(Long osmId) {
     	
-    	int result = 0;
+		SegmentMetadata result = null;
     	
     	try {
 			selectSQL.setLong(1, osmId);
@@ -184,28 +208,35 @@ public class PostgreSQLDatabase {
 			ResultSet resultSet = selectSQL.executeQuery();
 			
 			if(!resultSet.next()) {
-				return -1;
+				return result;
 			}
 			
-			result = resultSet.getInt(1);
+			int count = resultSet.getInt(1);
+			double meanSpeed = resultSet.getDouble(2);
+			double accumulatedSpeed = resultSet.getDouble(3);
+			
+			LOG.info(String.format("Got count = %d, mean speed = %e and accumulatedSpeed = %e for osm id = %d", count, meanSpeed, accumulatedSpeed, osmId));
+			
+			result = new SegmentMetadata(count, meanSpeed, accumulatedSpeed);
 						
 		} catch (SQLException e) {
 			LOG.error("Could not create selection SQL.", e);
 		}
     	
-    	return result;    	
+    	return result;
     }
     
-    public boolean insertTrackCount(Long osmId, int count) {
+    public boolean insertSegmentMetadata(Long osmId, int count, double meanSpeed, double accumulatedSpeed) {
     	
     	boolean result = false; 
     	
     	try {
 			insertSQL.setLong(1, osmId);
 			insertSQL.setInt(2, count);
-			int resultInt = insertSQL.executeUpdate();
+			insertSQL.setDouble(3, meanSpeed);
+			insertSQL.setDouble(4, accumulatedSpeed);
+			insertSQL.executeUpdate();
 			conn.commit();
-//			LOG.info("Result: " + resultInt);
 		} catch (SQLException e) {
 			LOG.error("Could not insert count for OSM ID: " + osmId, e);
 		}
@@ -213,21 +244,47 @@ public class PostgreSQLDatabase {
     	return result;
     }
     
-    public boolean updateTrackCount(Long osmId, int count) {
+    public boolean updateSegmentMetadata(Long osmId, int count, double meanSpeed, double accumulatedSpeed) {
     	
     	boolean result = false; 
     	
     	try {
 			updateSQL.setInt(1, count);
-			updateSQL.setLong(2, osmId);
-			int resultInt = updateSQL.executeUpdate();
+    		updateSQL.setDouble(2, meanSpeed);
+    		updateSQL.setDouble(3, accumulatedSpeed);
+			updateSQL.setLong(4, osmId);
+			updateSQL.executeUpdate();
 			conn.commit();
-//			LOG.info("Result: " + resultInt);
 		} catch (SQLException e) {
 			LOG.error("Could not insert count for OSM ID: " + osmId, e);
 		}
     	
     	return result;
+    }
+    
+    class SegmentMetadata {
+    	
+    	private int count;
+		private double meanSpeed;
+		private double accumulatedSpeed;
+    	
+    	public SegmentMetadata(int count, double meanSpeed, double accumulatedSpeed) {
+			this.count = count;
+			this.meanSpeed = meanSpeed;
+			this.accumulatedSpeed = accumulatedSpeed;
+		}
+    	public int getCount() {
+			return count;
+		}
+
+		public double getMeanSpeed() {
+			return meanSpeed;
+		}
+		public double getAccumulatedSpeed() {
+			return accumulatedSpeed;
+		}
+    	
+    	
     }
     
 }

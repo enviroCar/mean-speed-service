@@ -6,7 +6,7 @@ kafka:
   client:
     id: mean-speed
   bootstrap:
-    servers: https://processing.envirocar.org:9092
+    servers: https://localhost:9092
 
 trackcount:
   mapMatching:

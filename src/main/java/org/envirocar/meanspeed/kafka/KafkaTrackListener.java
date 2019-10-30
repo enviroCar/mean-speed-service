@@ -46,7 +46,7 @@ public class KafkaTrackListener {
 			return;
 		}
         
-		trackCountService.insertNewTrack(matchedTrack);
+		trackCountService.insertNewTrack(matchedTrack, track);
 		
         LOG.info("Inserted track {}", id);
     }

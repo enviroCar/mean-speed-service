@@ -13,6 +13,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import java.net.URL;
+import java.time.Duration;
 
 @Configuration
 public class RetrofitConfiguration {
@@ -36,9 +37,9 @@ public class RetrofitConfiguration {
     public OkHttpClient okHttpClient() {
         return new OkHttpClient.Builder()
                        .followRedirects(true)
-                       .followSslRedirects(true)
-//                       .callTimeout(Duration.ofMillis(30000))
-                       .addInterceptor(new LoggingInterceptor())
+                       .followSslRedirects(true).callTimeout(Duration.ofMillis(30000))
+                       .connectTimeout(Duration.ofMillis(30000)).readTimeout(Duration.ofMillis(30000))
+//                     .addInterceptor(new LoggingInterceptor())
                        .build();
     }
 
