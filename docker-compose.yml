@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  track-count:
+    image: ${REGISTRY}/mean-speed-service:latest
+    command: bash
+    networks:
+     - ecbase_shared
+     - eccomponents_ec-data-api
+
+networks:
+  ecbase_shared:
+    external: true
+  eccomponents_ec-data-api:
+    external: true
