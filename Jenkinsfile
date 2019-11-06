@@ -6,7 +6,7 @@ node {
   }
 
   stage('Build image') {
-    app = docker.build("ec-components/mean-speed-service")
+    app = docker.build("envirocar/mean-speed-service")
   }
 
   stage('Push image') {
