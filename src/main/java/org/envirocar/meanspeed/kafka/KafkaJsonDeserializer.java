@@ -56,7 +56,7 @@ public class KafkaJsonDeserializer<T> implements KafkaDeserializer<T> {
         	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
         	bufferedWriter.write(new String(bytes));
         	bufferedWriter.close();
-        	LOG.info(file.getAbsolutePath());
+        	LOG.trace(file.getAbsolutePath());
             return objectMapper.readValue(bytes, type);
         } catch (IOException e) {
             LOG.error("Error reading " + type, e);

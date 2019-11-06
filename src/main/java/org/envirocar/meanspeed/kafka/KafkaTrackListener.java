@@ -28,6 +28,8 @@
  */
 package org.envirocar.meanspeed.kafka;
 
+import java.sql.SQLException;
+
 import org.envirocar.meanspeed.JsonConstants;
 import org.envirocar.meanspeed.mapmatching.MapMatchingResult;
 import org.envirocar.meanspeed.mapmatching.MapMatchingService;
@@ -47,13 +49,13 @@ public class KafkaTrackListener {
 
 	private static final Logger LOG = LoggerFactory.getLogger(KafkaTrackListener.class);
 
-	private MeanSpeedService trackCountService;
+	private MeanSpeedService meanSpeedService;
 	
 	private MapMatchingService mapMatcher;
 	
     @Autowired
     public KafkaTrackListener(MeanSpeedService service, MapMatchingService mapMatcher) {
-    	this.trackCountService = service;
+    	this.meanSpeedService = service;
     	this.mapMatcher = mapMatcher;
     }
 
@@ -64,17 +66,46 @@ public class KafkaTrackListener {
         
         LOG.info("Received track {}", id);
         
-		MapMatchingResult matchedTrack = null;
+        boolean trackExists = false;
+        
+        try {
+        	trackExists = meanSpeedService.getPostgreSQLDatabase().trackIDExists(id);
+		} catch (SQLException e1) {
+			LOG.error(e1.getMessage());
+		}
+        
+        if (trackExists) {
+        	LOG.info("Skipping existing track {}", id);
+        	return;
+        }
+        
+        MapMatchingResult matchedTrack = null;
 		try {
 			Call<MapMatchingResult> result = mapMatcher.mapMatch(track);
 			Response<MapMatchingResult> response = result.execute();
 			matchedTrack = response.body();
+			
+			if(matchedTrack == null) {
+				throw new IllegalArgumentException();
+			}
+			
 		} catch (Exception e) {
-			LOG.error("Could not match track to map.", e);
+			LOG.error("Could not match track to map: " + id, e);
+			try {
+				meanSpeedService.getPostgreSQLDatabase().insertTrackIDNotMatched(id);
+			} catch (SQLException e1) {
+				LOG.error("Could not add track id to database: " + id, e);
+			}
 			return;
 		}
         
-		trackCountService.insertNewTrack(matchedTrack, track);
+		meanSpeedService.insertNewTrack(matchedTrack, track);
+        
+        try {
+        	meanSpeedService.getPostgreSQLDatabase().insertTrackID(id);
+		} catch (SQLException e1) {
+			LOG.error(e1.getMessage());
+		}
 		
         LOG.info("Inserted track {}", id);
     }

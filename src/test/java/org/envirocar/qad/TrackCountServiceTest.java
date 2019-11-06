@@ -60,9 +60,14 @@ public class TrackCountServiceTest {
 	                .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
 	                .registerModule(jtsModule);
 			
-			matchedTrack = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("mapMatchingResult.json"), MapMatchingResult.class);
+//			String track = "track.json";
+//			String matched = "mapMatchingResult.json";
+			String track = "track_with_missing_speed_values.json";
+			String matched = "track_with_missing_speed_values_matched.json";
 			
-			features = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("track.json"), FeatureCollection.class);
+			matchedTrack = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream(matched), MapMatchingResult.class);
+			
+			features = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream(track), FeatureCollection.class);
 			
 		} catch (IOException e) {
 			fail(e.getMessage());

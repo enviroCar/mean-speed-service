@@ -29,8 +29,11 @@
 package org.envirocar.qad;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.sql.SQLException;
 import java.util.Random;
+import java.util.UUID;
 
 import org.envirocar.meanspeed.database.PostgreSQLDatabase;
 import org.junit.Test;
@@ -42,12 +45,48 @@ public class DatabaseTest {
 		
 		PostgreSQLDatabase database = new PostgreSQLDatabase();
 		
-		long osmID = new Random().nextInt();
+//		try {
+//			database.createDemoTracks();
+//		} catch (SQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
-		if(osmID < 0) {
-			osmID = osmID * -1;
+		String trackID = UUID.randomUUID().toString();
+		
+		try {
+			boolean trackIDExists = database.trackIDExists(trackID);
+			
+			assertTrue(!trackIDExists);
+			
+		} catch (SQLException e) {
+			fail(e.getMessage());
 		}
 		
+		try {
+			database.insertTrackID(trackID);
+			
+		} catch (SQLException e) {
+			fail(e.getMessage());
+		}
+		
+		try {
+			boolean trackIDExists = database.trackIDExists(trackID);
+			
+			assertTrue(trackIDExists);
+			
+		} catch (SQLException e) {
+			fail(e.getMessage());
+		}
+		
+		
+		
+//		long osmID = new Random().nextInt();
+//		
+//		if(osmID < 0) {
+//			osmID = osmID * -1;
+//		}
+//		
 //		int count = database.getSegmentMetadata(osmID);
 //				
 //		assertTrue(count == -1);

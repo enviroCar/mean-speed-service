@@ -65,12 +65,20 @@ public class MeanSpeedService {
 		
 		for (MatchedPoint matchedPoint : matchedPoints) {
 			Long osmID = matchedPoint.getOsmId();
+			String measurementID = null;
+			double speed = Double.NaN;
+			try {
+				measurementID = matchedPoint.getMeasurementId();
+				speed = getSpeed(measurementID, track);
+				postgreSQLDatabase.updateSegmentSpeed(osmID, speed);				
+			} catch (Exception e) {
+				LOG.error("Could not add measurment with id {} and speed {}.", measurementID, speed);
+			}
+			
 			if(osmIDList.contains(osmID)) {
 				continue;
 			}
-			String measurementID = matchedPoint.getMeasurementId();
-			double speed = getSpeed(measurementID, track);
-			postgreSQLDatabase.updateSegmentMetadata(osmID, speed);
+			postgreSQLDatabase.updateSegmentTrackCount(osmID);
 			osmIDList.add(osmID);
 		}
 		
@@ -93,13 +101,17 @@ public class MeanSpeedService {
 			}
 		}
 		
-		LOG.info("Measurement id:" + measurementID);		
+		LOG.trace("Measurement id:" + measurementID);		
 		
 		return result;		
 	}
 
 	private JsonNode getProperty(String name, ObjectNode objectNode) {		
 		return objectNode.get(name);
+	}
+
+	public PostgreSQLDatabase getPostgreSQLDatabase() {
+		return postgreSQLDatabase;
 	}
 	
 }
