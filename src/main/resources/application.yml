@@ -6,7 +6,7 @@ kafka:
   client:
     id: mean-speed
   bootstrap:
-    servers: ${KAFKA_ENDPOINT:localhost:9092}
+    servers: ${KAFKA_ENDPOINT:processing.envirocar.org:9092}
 
 mean-speed:
   mapMatching:
