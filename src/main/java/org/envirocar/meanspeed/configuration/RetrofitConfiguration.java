@@ -47,7 +47,7 @@ import java.time.Duration;
 public class RetrofitConfiguration {
 
     @Bean
-    public Retrofit retrofit(JacksonConverterFactory factory, OkHttpClient client, @Value("${trackcount.mapMatching.url}") URL url) {
+    public Retrofit retrofit(JacksonConverterFactory factory, OkHttpClient client, @Value("${mean-speed.mapMatching.url}") URL url) {
         return new Retrofit.Builder().addConverterFactory(factory).client(client).baseUrl(url).build();
     }
 
@@ -57,7 +57,7 @@ public class RetrofitConfiguration {
     }
 
     @Bean
-    public MapMatchingService mapMatchingService(Retrofit retrofit, @Value("${trackcount.mapMatching.url}") URL url) {
+    public MapMatchingService mapMatchingService(Retrofit retrofit, @Value("${mean-speed.mapMatching.url}") URL url) {
         return retrofit.newBuilder().baseUrl(url).build().create(MapMatchingService.class);
     }
 

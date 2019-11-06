@@ -41,6 +41,8 @@ import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 
 public class PostgreSQLDatabase {
 	
@@ -89,21 +91,21 @@ public class PostgreSQLDatabase {
     public static final String pgCreationStringTrackIDsNotMatched = "CREATE TABLE " + TABLE_NAME_TRACK_IDS_NOT_MATCHED + " ("
     		+ COLUMN_NAME_TRACK_ID + " VARCHAR NOT NULL PRIMARY KEY)";
     
-    public PostgreSQLDatabase() {
+    public PostgreSQLDatabase(String host, String port, String dbname, String username, String password) {
     	
-    	Properties postgresProperties = new Properties();
-    	
-    	try {
-			postgresProperties.load(getClass().getClassLoader().getResourceAsStream("postgres.properties"));
-		} catch (IOException e) {
-			LOG.error("Could not load properties." , e);
-		}
-    	
-    	String host = postgresProperties.getProperty("host");
-    	String port = postgresProperties.getProperty("port");
-    	String dbname = postgresProperties.getProperty("dbname");
-    	String username = postgresProperties.getProperty("username");
-    	String password = postgresProperties.getProperty("password");
+//    	Properties postgresProperties = new Properties();
+//    	
+//    	try {
+//			postgresProperties.load(getClass().getClassLoader().getResourceAsStream("postgres.properties"));
+//		} catch (IOException e) {
+//			LOG.error("Could not load properties." , e);
+//		}
+//    	
+//    	host = postgresProperties.getProperty("host");
+//    	port = postgresProperties.getProperty("port");
+//    	dbname = postgresProperties.getProperty("dbname");
+//    	username = postgresProperties.getProperty("username");
+//    	password = postgresProperties.getProperty("password");
     	
 		try {
 

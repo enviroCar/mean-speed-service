@@ -1,21 +1,16 @@
 
 
 kafka:
-  group:
-    id: mean-speed
-  client:
-    id: mean-speed
-  bootstrap:
-    servers: ${KAFKA_ENDPOINT:localhost:9092}
+  enabled: false
 
 mean-speed:
   mapMatching:
     url: ${MSS_MAPMATCHING_ENDPOINT:https://processing.envirocar.org}
 
 postgres:
-  host: ${POSTGRES_HOST://localhost}
+  host: ${POSTGRES_HOST:localhost}
   port: ${POSTGRES_PORT:5432}
-  dbname: ${POSTGRES_DBNAME:postgres}
+  dbname: ${POSTGRES_DBNAME:postgres_test}
   username: ${POSTGRES_USERNAME:postgres}
   password: ${POSTGRES_PASSWORD:postgres}
     

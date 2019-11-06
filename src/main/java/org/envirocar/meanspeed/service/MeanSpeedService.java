@@ -53,8 +53,8 @@ public class MeanSpeedService {
 	private static final String VALUE_NAME = "value";
 	PostgreSQLDatabase postgreSQLDatabase;
 	
-	public MeanSpeedService() {
-		postgreSQLDatabase = new PostgreSQLDatabase();
+	public MeanSpeedService(PostgreSQLDatabase postgreSQLDatabase) {
+		this.postgreSQLDatabase = postgreSQLDatabase;
 	}
 	
 	public void insertNewTrack(MapMatchingResult matchedTrack, FeatureCollection track) {

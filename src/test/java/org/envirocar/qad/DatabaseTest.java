@@ -37,14 +37,23 @@ import java.util.UUID;
 
 import org.envirocar.meanspeed.database.PostgreSQLDatabase;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@ActiveProfiles("test")
 public class DatabaseTest {
 
+	@Autowired
+	private PostgreSQLDatabase database;
+	
 	@Test
 	public void testDatabaseConnection() {
-		
-		PostgreSQLDatabase database = new PostgreSQLDatabase();
-		
+				
 //		try {
 //			database.createDemoTracks();
 //		} catch (SQLException e) {

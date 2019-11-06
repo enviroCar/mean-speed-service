@@ -36,18 +36,25 @@ import org.envirocar.meanspeed.mapmatching.MapMatchingResult;
 import org.envirocar.meanspeed.model.FeatureCollection;
 import org.envirocar.meanspeed.service.MeanSpeedService;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.n52.jackson.datatype.jts.JtsModule;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class TrackCountServiceTest {
+    
+	@Autowired	
+	MeanSpeedService trackCountService;
 	
 	@Test
 	public void testTrackOcuntService() {
-		
-		MeanSpeedService trackCountService = new MeanSpeedService();
-		
+				
 		MapMatchingResult matchedTrack = null;		
         FeatureCollection features = null;	
 		try {			
