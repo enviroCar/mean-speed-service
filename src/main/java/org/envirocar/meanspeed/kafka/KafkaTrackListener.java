@@ -34,7 +34,7 @@ import org.envirocar.meanspeed.JsonConstants;
 import org.envirocar.meanspeed.mapmatching.MapMatchingResult;
 import org.envirocar.meanspeed.mapmatching.MapMatchingService;
 import org.envirocar.meanspeed.model.FeatureCollection;
-import org.envirocar.meanspeed.service.MeanSpeedService;
+import org.envirocar.meanspeed.service.SegmentMetadataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,12 +49,12 @@ public class KafkaTrackListener {
 
 	private static final Logger LOG = LoggerFactory.getLogger(KafkaTrackListener.class);
 
-	private MeanSpeedService meanSpeedService;
+	private SegmentMetadataService meanSpeedService;
 	
 	private MapMatchingService mapMatcher;
 	
     @Autowired
-    public KafkaTrackListener(MeanSpeedService service, MapMatchingService mapMatcher) {
+    public KafkaTrackListener(SegmentMetadataService service, MapMatchingService mapMatcher) {
     	this.meanSpeedService = service;
     	this.mapMatcher = mapMatcher;
     }

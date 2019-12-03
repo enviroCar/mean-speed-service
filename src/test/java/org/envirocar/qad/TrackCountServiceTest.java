@@ -34,7 +34,7 @@ import java.io.IOException;
 
 import org.envirocar.meanspeed.mapmatching.MapMatchingResult;
 import org.envirocar.meanspeed.model.FeatureCollection;
-import org.envirocar.meanspeed.service.MeanSpeedService;
+import org.envirocar.meanspeed.service.SegmentMetadataService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.n52.jackson.datatype.jts.JtsModule;
@@ -50,7 +50,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class TrackCountServiceTest {
     
 	@Autowired	
-	MeanSpeedService trackCountService;
+	SegmentMetadataService trackCountService;
 	
 	@Test
 	public void testTrackOcuntService() {

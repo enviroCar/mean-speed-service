@@ -44,16 +44,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Service
-public class MeanSpeedService {
+public class SegmentMetadataService {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(MeanSpeedService.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SegmentMetadataService.class);
 	private static final String ID_NAME = "id";
 	private static final String GPS_SPEED_NAME = "GPS Speed";
 	private static final String PHENOMENONS_NAME = "phenomenons";
 	private static final String VALUE_NAME = "value";
 	PostgreSQLDatabase postgreSQLDatabase;
 	
-	public MeanSpeedService(PostgreSQLDatabase postgreSQLDatabase) {
+	public SegmentMetadataService(PostgreSQLDatabase postgreSQLDatabase) {
 		this.postgreSQLDatabase = postgreSQLDatabase;
 	}
 	
