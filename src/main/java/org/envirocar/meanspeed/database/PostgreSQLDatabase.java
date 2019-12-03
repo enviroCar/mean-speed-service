@@ -41,8 +41,6 @@ import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 
 public class PostgreSQLDatabase {
 	
@@ -52,9 +50,15 @@ public class PostgreSQLDatabase {
     private static final String TABLE_NAME_TRACK_IDS = "TRACK_IDS";
     private static final String TABLE_NAME_TRACK_IDS_NOT_MATCHED = "TRACK_IDS_NOT_MATCHED";
     private static final String COLUMN_NAME_COUNT = "COUNT";
-    private static final String COLUMN_NAME_MEASUREMENT_COUNT = "MEASUREMENT_COUNT";
+    private static final String COLUMN_NAME_SPEED_MEASUREMENT_COUNT = "SPEED_MEASUREMENT_COUNT";
     private static final String COLUMN_NAME_MEAN_SPEED = "MEAN_SPEED";
     private static final String COLUMN_NAME_ACCUMULATED_SPEED = "ACCUMULATED_SPEED";
+    private static final String COLUMN_NAME_CO2_MEASUREMENT_COUNT = "CO2_MEASUREMENT_COUNT";
+    private static final String COLUMN_NAME_MEAN_CO2 = "MEAN_CO2";
+    private static final String COLUMN_NAME_ACCUMULATED_CO2 = "ACCUMULATED_CO2";
+    private static final String COLUMN_NAME_CONSUMPTION_MEASUREMENT_COUNT = "CONSUMPTION_MEASUREMENT_COUNT";
+    private static final String COLUMN_NAME_MEAN_CONSUMPTION = "MEAN_CONSUMPTION";
+    private static final String COLUMN_NAME_ACCUMULATED_CONSUMPTION = "ACCUMULATED_CONSUMPTION";
     private static final String COLUMN_NAME_OSM_ID = "OSM_ID";
 	private static final String COLUMN_NAME_TRACK_ID = "TRACK_ID";
     
@@ -62,28 +66,44 @@ public class PostgreSQLDatabase {
     private static Connection conn = null;
 
     /** SQL to insert a response into the database */
-    public static final String insertionString = "INSERT INTO " + TABLE_NAME + " VALUES (?, ?, ?, ?, ?)";
+    public static final String insertionString = "INSERT INTO " + TABLE_NAME + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     /** SQL to update a response, that was already stored in the database */
-    public static final String updateString = "UPDATE " + TABLE_NAME + " SET " + COLUMN_NAME_MEASUREMENT_COUNT + " = (?), " + COLUMN_NAME_MEAN_SPEED + " = (?), " + COLUMN_NAME_ACCUMULATED_SPEED + " = (?) " + " WHERE " + COLUMN_NAME_OSM_ID + " = (?)";
+    public static final String updateStringSpeed = "UPDATE " + TABLE_NAME + " SET " + COLUMN_NAME_SPEED_MEASUREMENT_COUNT + " = (?), " + COLUMN_NAME_MEAN_SPEED + " = (?), " + COLUMN_NAME_ACCUMULATED_SPEED + " = (?) " + " WHERE " + COLUMN_NAME_OSM_ID + " = (?)";
+
+    /** SQL to update a response, that was already stored in the database */
+    public static final String updateStringCo2 = "UPDATE " + TABLE_NAME + " SET " + COLUMN_NAME_CO2_MEASUREMENT_COUNT + " = (?), " + COLUMN_NAME_MEAN_CO2 + " = (?), " + COLUMN_NAME_ACCUMULATED_CO2 + " = (?) " + " WHERE " + COLUMN_NAME_OSM_ID + " = (?)";
+ 
+    /** SQL to update a response, that was already stored in the database */
+    public static final String updateStringConsumption = "UPDATE " + TABLE_NAME + " SET " + COLUMN_NAME_CONSUMPTION_MEASUREMENT_COUNT + " = (?), " + COLUMN_NAME_MEAN_CONSUMPTION + " = (?), " + COLUMN_NAME_ACCUMULATED_CONSUMPTION + " = (?) " + " WHERE " + COLUMN_NAME_OSM_ID + " = (?)";
+     
+//    /** SQL to update a response, that was already stored in the database */
+//    public static final String updateString = "UPDATE " + TABLE_NAME + " SET (?) = (?), (?) = (?), (?) = (?) WHERE " + COLUMN_NAME_OSM_ID + " = (?)";
 
     /** SQL to update a response, that was already stored in the database */
     public static final String updateStringTrackCount = "UPDATE " + TABLE_NAME + " SET " + COLUMN_NAME_COUNT + " = (?) WHERE " + COLUMN_NAME_OSM_ID + " = (?)";
+ 
+    public static final String selectionString = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_NAME_OSM_ID + " = (?)";
     
-    /** SQL to retrieve a response from the database */
-    public static final String selectionString = "SELECT " + COLUMN_NAME_COUNT + ", " + COLUMN_NAME_MEASUREMENT_COUNT + ", " + COLUMN_NAME_MEAN_SPEED +   ", " + COLUMN_NAME_ACCUMULATED_SPEED + " FROM " + TABLE_NAME + " WHERE " + COLUMN_NAME_OSM_ID + " = (?)";
-
     protected static PreparedStatement insertSQL = null;
-    protected static PreparedStatement updateSQL = null;
+    protected static PreparedStatement updateSQLConsumption = null;
+    protected static PreparedStatement updateSQLSpeed = null;
+    protected static PreparedStatement updateSQLCo2 = null;
     protected static PreparedStatement updateSQLTrackCount = null;
     protected static PreparedStatement selectSQL = null;
     
     public static final String pgCreationString = "CREATE TABLE " + TABLE_NAME + " ("
     		+ COLUMN_NAME_OSM_ID + " INTEGER NOT NULL PRIMARY KEY, "
             + COLUMN_NAME_COUNT + " SMALLINT, "
-            + COLUMN_NAME_MEASUREMENT_COUNT + " SMALLINT, "
+            + COLUMN_NAME_SPEED_MEASUREMENT_COUNT + " SMALLINT, "
             + COLUMN_NAME_MEAN_SPEED + " DOUBLE PRECISION,"
-            + COLUMN_NAME_ACCUMULATED_SPEED + " DOUBLE PRECISION)";
+            + COLUMN_NAME_ACCUMULATED_SPEED + " DOUBLE PRECISION, "
+            + COLUMN_NAME_CO2_MEASUREMENT_COUNT + " SMALLINT, "
+            + COLUMN_NAME_MEAN_CO2 + " DOUBLE PRECISION,"
+            + COLUMN_NAME_ACCUMULATED_CO2 + " DOUBLE PRECISION, "
+            + COLUMN_NAME_CONSUMPTION_MEASUREMENT_COUNT + " SMALLINT, "
+            + COLUMN_NAME_MEAN_CONSUMPTION + " DOUBLE PRECISION,"
+            + COLUMN_NAME_ACCUMULATED_CONSUMPTION + " DOUBLE PRECISION)";            
     
     public static final String pgCreationStringTrackIDs = "CREATE TABLE " + TABLE_NAME_TRACK_IDS + " ("
     		+ COLUMN_NAME_TRACK_ID + " VARCHAR NOT NULL PRIMARY KEY)";
@@ -194,7 +214,9 @@ public class PostgreSQLDatabase {
             PostgreSQLDatabase.closePreparedStatements();
             PostgreSQLDatabase.insertSQL = PostgreSQLDatabase.conn.prepareStatement(insertionString);
             PostgreSQLDatabase.selectSQL = PostgreSQLDatabase.conn.prepareStatement(selectionString);
-            PostgreSQLDatabase.updateSQL = PostgreSQLDatabase.conn.prepareStatement(updateString);
+            PostgreSQLDatabase.updateSQLConsumption = PostgreSQLDatabase.conn.prepareStatement(updateStringConsumption);
+            PostgreSQLDatabase.updateSQLSpeed = PostgreSQLDatabase.conn.prepareStatement(updateStringSpeed);
+            PostgreSQLDatabase.updateSQLCo2 = PostgreSQLDatabase.conn.prepareStatement(updateStringCo2);
             PostgreSQLDatabase.updateSQLTrackCount = PostgreSQLDatabase.conn.prepareStatement(updateStringTrackCount);
         } catch (SQLException e) {
             LOG.error("Could not create the prepared statements.", e);
@@ -213,9 +235,17 @@ public class PostgreSQLDatabase {
                 PostgreSQLDatabase.selectSQL.close();
                 PostgreSQLDatabase.selectSQL = null;
             }
-            if (PostgreSQLDatabase.updateSQL != null) {
-                PostgreSQLDatabase.updateSQL.close();
-                PostgreSQLDatabase.updateSQL = null;
+            if (PostgreSQLDatabase.updateSQLConsumption != null) {
+                PostgreSQLDatabase.updateSQLConsumption.close();
+                PostgreSQLDatabase.updateSQLConsumption = null;
+            }
+            if (PostgreSQLDatabase.updateSQLSpeed != null) {
+                PostgreSQLDatabase.updateSQLSpeed.close();
+                PostgreSQLDatabase.updateSQLSpeed = null;
+            }
+            if (PostgreSQLDatabase.updateSQLCo2 != null) {
+                PostgreSQLDatabase.updateSQLCo2.close();
+                PostgreSQLDatabase.updateSQLCo2 = null;
             }
             if (PostgreSQLDatabase.updateSQLTrackCount != null) {
                 PostgreSQLDatabase.updateSQLTrackCount.close();
@@ -229,9 +259,9 @@ public class PostgreSQLDatabase {
         return true;
     }
     
-    private double calculateMeanSpeed(double accumulatedSpeed, int count) {
+    private double calculateMean(double accumulatedValues, int count) {
 		
-		return accumulatedSpeed / count;
+		return accumulatedValues / count;
 	}
     
     public void updateSegmentSpeed(long osmId, double speed) {
@@ -240,11 +270,13 @@ public class PostgreSQLDatabase {
     	
     	if (segmentMetadata == null) {
     		
-    		insertSegmentSpeed(osmId, speed);
+    		segmentMetadata = new SegmentMetadata(0, 1, speed, speed, 0, 0, 0, 0, 0, 0);
+    		
+    		insertSegment(osmId, segmentMetadata);
     		
     	} else {
     		
-    		int measurementCount = segmentMetadata.getMeasurementCount();
+    		int measurementCount = segmentMetadata.getSpeedMeasurementCount();
     		
     		measurementCount++;
     		
@@ -252,9 +284,61 @@ public class PostgreSQLDatabase {
     		
     		accumulatedSpeed = accumulatedSpeed + speed;
     		
-			double newMeanSpeed = calculateMeanSpeed(accumulatedSpeed, measurementCount);
+			double newMeanSpeed = calculateMean(accumulatedSpeed, measurementCount);
     		
     		updateSegmentSpeed(osmId, measurementCount, newMeanSpeed, accumulatedSpeed);
+    	}
+    }
+    
+    public void updateSegmentCo2(long osmId, double value) {
+    	
+    	SegmentMetadata segmentMetadata = getSegmentMetadata(osmId);
+    	
+    	if (segmentMetadata == null) {
+    		
+    		segmentMetadata = new SegmentMetadata(0, 0, 0, 0, 1, value, value, 0, 0, 0);
+    		
+    		insertSegment(osmId, segmentMetadata);
+    		
+    	} else {
+    		
+    		int measurementCount = segmentMetadata.getCo2MeasurementCount();
+    		
+    		measurementCount++;
+    		
+    		double accumulated = segmentMetadata.getAccumulatedCo2();
+    		
+    		accumulated = accumulated + value;
+    		
+			double newMean = calculateMean(accumulated, measurementCount);
+    		
+    		updateSegmentCo2(osmId, measurementCount, newMean, accumulated);
+    	}
+    }
+    
+    public void updateSegmentConsumption(long osmId, double value) {
+    	
+    	SegmentMetadata segmentMetadata = getSegmentMetadata(osmId);
+    	
+    	if (segmentMetadata == null) {
+    		
+    		segmentMetadata = new SegmentMetadata(0, 0, 0, 0, 0, 0, 0, 1, value, value);
+    		
+    		insertSegment(osmId, segmentMetadata);
+    		
+    	} else {
+    		
+    		int measurementCount = segmentMetadata.getConsumptionMeasurementCount();
+    		
+    		measurementCount++;
+    		
+    		double accumulated = segmentMetadata.getAccumulatedConsumption();
+    		
+    		accumulated = accumulated + value;
+    		
+			double newMean = calculateMean(accumulated, measurementCount);
+    		
+    		updateSegment(osmId, measurementCount, newMean, accumulated);
     	}
     }
 
@@ -271,14 +355,20 @@ public class PostgreSQLDatabase {
 				return result;
 			}
 			
-			int count = resultSet.getInt(1);
-			int measurementCount = resultSet.getInt(2);
-			double meanSpeed = resultSet.getDouble(3);
-			double accumulatedSpeed = resultSet.getDouble(4);
+			int count = resultSet.getInt(COLUMN_NAME_COUNT);
+			int speedMeasurementCount = resultSet.getInt(COLUMN_NAME_SPEED_MEASUREMENT_COUNT);
+			double meanSpeed = resultSet.getDouble(COLUMN_NAME_MEAN_SPEED);
+			double accumulatedSpeed = resultSet.getDouble(COLUMN_NAME_ACCUMULATED_SPEED);
+			int co2MeasurementCount = resultSet.getInt(COLUMN_NAME_CO2_MEASUREMENT_COUNT);
+			double meanCo2 = resultSet.getDouble(COLUMN_NAME_MEAN_CO2);
+			double accumulatedCo2 = resultSet.getDouble(COLUMN_NAME_ACCUMULATED_CO2);
+			int consumptionMeasurementCount = resultSet.getInt(COLUMN_NAME_CONSUMPTION_MEASUREMENT_COUNT);
+			double meanConsumption = resultSet.getDouble(COLUMN_NAME_MEAN_CONSUMPTION);
+			double accumulatedConsumption = resultSet.getDouble(COLUMN_NAME_ACCUMULATED_CONSUMPTION);
 			
-			LOG.trace(String.format("Got count = %d, measurement count = %d, mean speed = %e and accumulatedSpeed = %e for osm id = %d", count, measurementCount, meanSpeed, accumulatedSpeed, osmId));
+			LOG.trace(String.format("Got count = %d, measurement count = %d, mean speed = %e and accumulatedSpeed = %e for osm id = %d", count, speedMeasurementCount, meanSpeed, accumulatedSpeed, osmId));
 			
-			result = new SegmentMetadata(count, measurementCount, meanSpeed, accumulatedSpeed);
+			result = new SegmentMetadata(count, speedMeasurementCount, meanSpeed, accumulatedSpeed, co2MeasurementCount, meanCo2, accumulatedCo2, consumptionMeasurementCount, meanConsumption, accumulatedConsumption);
 						
 		} catch (SQLException e) {
 			LOG.error("Could not create selection SQL.", e);
@@ -287,20 +377,26 @@ public class PostgreSQLDatabase {
     	return result;
     }
     
-    public boolean insertSegmentSpeed(Long osmId, double speed) {
+    public boolean insertSegment(Long osmId, SegmentMetadata segmentMetadata) {
     	
     	boolean result = false;
     	
     	try {
 			insertSQL.setLong(1, osmId);
 			insertSQL.setInt(2, 0);//track count will be increased separately
-			insertSQL.setInt(3, 1);
-			insertSQL.setDouble(4, speed);
-			insertSQL.setDouble(5, speed);
+			insertSQL.setInt(3, segmentMetadata.getSpeedMeasurementCount());
+			insertSQL.setDouble(4, segmentMetadata.getMeanSpeed());
+			insertSQL.setDouble(5, segmentMetadata.getAccumulatedSpeed());
+			insertSQL.setInt(6, segmentMetadata.getCo2MeasurementCount());
+			insertSQL.setDouble(7, segmentMetadata.getMeanCo2());
+			insertSQL.setDouble(8, segmentMetadata.getAccumulatedCo2());
+			insertSQL.setInt(9, segmentMetadata.getConsumptionMeasurementCount());
+			insertSQL.setDouble(10, segmentMetadata.getMeanConsumption());
+			insertSQL.setDouble(11, segmentMetadata.getAccumulatedConsumption());
 			insertSQL.executeUpdate();
 			conn.commit();
 		} catch (SQLException e) {
-			LOG.error("Could not insert count for OSM ID: " + osmId, e);
+			LOG.error("Could not insert Co2 for OSM ID: " + osmId, e);
 		}
     	
     	return result;
@@ -311,14 +407,53 @@ public class PostgreSQLDatabase {
     	boolean result = false; 
     	
     	try {
-			updateSQL.setInt(1, measurementCount);
-    		updateSQL.setDouble(2, meanSpeed);
-    		updateSQL.setDouble(3, accumulatedSpeed);
-			updateSQL.setLong(4, osmId);
-			updateSQL.executeUpdate();
+			updateSQLSpeed.setInt(1, measurementCount);
+    		updateSQLSpeed.setDouble(2, meanSpeed);
+    		updateSQLSpeed.setDouble(3, accumulatedSpeed);
+			updateSQLSpeed.setLong(4, osmId);
+			updateSQLSpeed.executeUpdate();
 			conn.commit();
 		} catch (SQLException e) {
-			LOG.error("Could not insert count for OSM ID: " + osmId, e);
+			LOG.error("Could not update speed for OSM ID: " + osmId, e);
+		}
+    	
+    	return result;
+    }
+    
+    public boolean updateSegmentCo2(Long osmId, int measurementCount, double meanCo2, double accumulatedCo2) {
+    	
+    	boolean result = false; 
+    	
+    	try {
+			updateSQLCo2.setInt(1, measurementCount);
+			updateSQLCo2.setDouble(2, meanCo2);
+			updateSQLCo2.setDouble(3, accumulatedCo2);
+			updateSQLCo2.setLong(4, osmId);
+			updateSQLCo2.executeUpdate();
+			conn.commit();
+		} catch (SQLException e) {
+			LOG.error("Could not update Co2 for OSM ID: " + osmId, e);
+		}
+    	
+    	return result;
+    }
+    
+    public boolean updateSegment(Long osmId, int measurementCount, double mean, double accumulated) {
+    	
+    	boolean result = false; 
+    	
+    	try {
+//			updateSQL.setString(1, COLUMN_NAME_CONSUMPTION_MEASUREMENT_COUNT);
+			updateSQLConsumption.setInt(1, measurementCount);
+//			updateSQL.setString(3, COLUMN_NAME_MEAN_CONSUMPTION);
+			updateSQLConsumption.setDouble(2, mean);
+//			updateSQL.setString(5, COLUMN_NAME_ACCUMULATED_CONSUMPTION);
+			updateSQLConsumption.setDouble(3, accumulated);
+			updateSQLConsumption.setLong(4, osmId);
+			updateSQLConsumption.executeUpdate();
+			conn.commit();
+		} catch (SQLException e) {
+			LOG.error("Could not update segment for OSM ID: " + osmId, e);
 		}
     	
     	return result;
@@ -405,55 +540,104 @@ public class PostgreSQLDatabase {
 		conn.commit();
     }
     
-    public void createDemoTracks() throws SQLException {
-    	
-    	PreparedStatement selectWays = PostgreSQLDatabase.conn.prepareStatement("SELECT DISTINCT OSM_ID FROM bfmap_ways LIMIT 500");
-    			
-		ResultSet resultSet = selectWays.executeQuery();
-				
-		while(resultSet.next()) {
-						
-			String osmID = resultSet.getString("OSM_ID");
-
-			LOG.info(osmID);
-			
-			double speed = new Random().nextDouble() * 100;
-			
-			int low = 1;
-			int high = 60;
-			int count = new Random().nextInt(high-low) + low;
-			
-			insertSegmentSpeed(Long.valueOf(osmID), speed);
-			
-		}
-    	
-    }
+//    public void createDemoTracks() throws SQLException {
+//    	
+//    	PreparedStatement selectWays = PostgreSQLDatabase.conn.prepareStatement("SELECT DISTINCT OSM_ID FROM bfmap_ways LIMIT 500");
+//    			
+//		ResultSet resultSet = selectWays.executeQuery();
+//				
+//		while(resultSet.next()) {
+//						
+//			String osmID = resultSet.getString("OSM_ID");
+//
+//			LOG.info(osmID);
+//			
+//			double speed = new Random().nextDouble() * 100;
+//			
+//			int low = 1;
+//			int high = 60;
+//			int count = new Random().nextInt(high-low) + low;
+//			
+//			insertSegmentSpeed(Long.valueOf(osmID), speed);
+//			
+//		}
+//    	
+//    }
     
     class SegmentMetadata {
     	
     	private int count;
-    	private int measurementCount;
+    	private int speedMeasurementCount;
 		private double meanSpeed;
 		private double accumulatedSpeed;
-    	
-    	public SegmentMetadata(int count, int measurementCount, double meanSpeed, double accumulatedSpeed) {
+    	private int co2MeasurementCount;
+		private double meanCo2;
+		private double accumulatedCo2;
+    	private int consumptionMeasurementCount;
+		private double meanConsumption;
+		private double accumulatedConsumption;
+		
+    	public SegmentMetadata(int count, int speedMeasurementCount, double meanSpeed, double accumulatedSpeed, 
+    			int co2MeasurementCount, double meanCo2, double accumulatedCo2,
+    			int consumptionMeasurementCount, double meanConsumption, double accumulatedConsumption) {
 			this.count = count;
-			this.measurementCount = measurementCount;
+			this.speedMeasurementCount = speedMeasurementCount;
 			this.meanSpeed = meanSpeed;
 			this.accumulatedSpeed = accumulatedSpeed;
+			this.co2MeasurementCount = co2MeasurementCount;
+			this.meanCo2 = meanCo2;
+			this.accumulatedCo2 = accumulatedCo2;
+			this.consumptionMeasurementCount = consumptionMeasurementCount;
+			this.meanConsumption = meanConsumption;
+			this.accumulatedConsumption = accumulatedConsumption;
 		}
     	public int getCount() {
 			return count;
 		}
-
-		public int getMeasurementCount() {
-			return measurementCount;
+		public int getSpeedMeasurementCount() {
+			return speedMeasurementCount;
 		}
 		public double getMeanSpeed() {
 			return meanSpeed;
 		}
 		public double getAccumulatedSpeed() {
 			return accumulatedSpeed;
+		}
+		public int getCo2MeasurementCount() {
+			return co2MeasurementCount;
+		}
+		public void setCo2MeasurementCount(int co2MeasurementCount) {
+			this.co2MeasurementCount = co2MeasurementCount;
+		}
+		public double getMeanCo2() {
+			return meanCo2;
+		}
+		public void setMeanCo2(double meanCo2) {
+			this.meanCo2 = meanCo2;
+		}
+		public double getAccumulatedCo2() {
+			return accumulatedCo2;
+		}
+		public void setAccumulatedCo2(double accumulatedCo2) {
+			this.accumulatedCo2 = accumulatedCo2;
+		}
+		public int getConsumptionMeasurementCount() {
+			return consumptionMeasurementCount;
+		}
+		public void setConsumptionMeasurementCount(int consumptionMeasurementCount) {
+			this.consumptionMeasurementCount = consumptionMeasurementCount;
+		}
+		public double getMeanConsumption() {
+			return meanConsumption;
+		}
+		public void setMeanConsumption(double meanConsumption) {
+			this.meanConsumption = meanConsumption;
+		}
+		public double getAccumulatedConsumption() {
+			return accumulatedConsumption;
+		}
+		public void setAccumulatedConsumption(double accumulatedConsumption) {
+			this.accumulatedConsumption = accumulatedConsumption;
 		}
     	
     }

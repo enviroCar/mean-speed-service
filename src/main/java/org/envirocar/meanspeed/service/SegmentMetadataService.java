@@ -49,6 +49,8 @@ public class SegmentMetadataService {
 	private static final Logger LOG = LoggerFactory.getLogger(SegmentMetadataService.class);
 	private static final String ID_NAME = "id";
 	private static final String GPS_SPEED_NAME = "GPS Speed";
+	private static final String CO2_NAME = "CO2";
+	private static final String CONSUMPTION_NAME = "Consumption";
 	private static final String PHENOMENONS_NAME = "phenomenons";
 	private static final String VALUE_NAME = "value";
 	PostgreSQLDatabase postgreSQLDatabase;
@@ -67,12 +69,26 @@ public class SegmentMetadataService {
 			Long osmID = matchedPoint.getOsmId();
 			String measurementID = null;
 			double speed = Double.NaN;
+			double co2 = Double.NaN;
+			double consumption = Double.NaN;
+			measurementID = matchedPoint.getMeasurementId();
 			try {
-				measurementID = matchedPoint.getMeasurementId();
-				speed = getSpeed(measurementID, track);
-				postgreSQLDatabase.updateSegmentSpeed(osmID, speed);				
+				speed = getValue(measurementID, track, GPS_SPEED_NAME);
+				postgreSQLDatabase.updateSegmentSpeed(osmID, speed);
 			} catch (Exception e) {
-				LOG.error("Could not add measurment with id {} and speed {}.", measurementID, speed);
+				LOG.error("Could not add measurement with id {} and speed {}.", measurementID, speed);
+			}
+			try {
+				co2 = getValue(measurementID, track, CO2_NAME);
+				postgreSQLDatabase.updateSegmentCo2(osmID, co2);
+			} catch (Exception e) {
+				LOG.error("Could not add measurement with id {} and co2 {}.", measurementID, co2);
+			}
+			try {
+				consumption = getValue(measurementID, track, CONSUMPTION_NAME);
+				postgreSQLDatabase.updateSegmentConsumption(osmID, consumption);
+			} catch (Exception e) {
+				LOG.error("Could not add measurement with id {} and consumption {}.", measurementID, consumption);
 			}
 			
 			if(osmIDList.contains(osmID)) {
@@ -84,7 +100,7 @@ public class SegmentMetadataService {
 		
 	}
 	
-	private double getSpeed(String measurementID, FeatureCollection track) {
+	private double getValue(String measurementID, FeatureCollection track, String valueName) {
 		
 		double result = -1d;
 		
@@ -95,13 +111,13 @@ public class SegmentMetadataService {
 			String id = getProperty(ID_NAME, properties).asText().trim();
 			if(id.equals(measurementID.trim())){
 				JsonNode phenomenons = getProperty(PHENOMENONS_NAME, properties);
-				JsonNode gpsSpeedNode = getProperty(GPS_SPEED_NAME, (ObjectNode) phenomenons);
+				JsonNode gpsSpeedNode = getProperty(valueName, (ObjectNode) phenomenons);
 				result = getProperty(VALUE_NAME, (ObjectNode) gpsSpeedNode).asDouble();
 				return result;
 			}
 		}
 		
-		LOG.trace("Measurement id:" + measurementID);		
+		LOG.trace("Measurement id:" + measurementID);
 		
 		return result;		
 	}
