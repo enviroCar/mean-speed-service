@@ -48,7 +48,7 @@ import static java.util.stream.Collectors.toList;
 
 @Component
 public class TrackParserImpl implements TrackParser {
-    private static final String PHENOMENON_SPEED = "Speed";
+    private static final String PHENOMENON_SPEED = "GPS Speed";
     private static final String PHENOMENON_CONSUMPTION = "Consumption";
     private static final String PHENOMENON_CARBON_DIOXIDE = "CO2";
 
@@ -56,10 +56,13 @@ public class TrackParserImpl implements TrackParser {
     public Track createTrack(FeatureCollection collection) {
 
         String id = collection.getProperties().path(JsonConstants.ID).textValue();
+
+        String fuelType = collection.getProperties().path(JsonConstants.SENSOR).path(JsonConstants.PROPERTIES)
+                                    .path(JsonConstants.FUEL_TYPE).textValue();
         List<Measurement> measurements = collection.getFeatures().stream()
                                                    .map(this::createMeasurement)
                                                    .collect(toList());
-        return new Track(id, measurements);
+        return new Track(id, fuelType, measurements);
     }
 
     private Measurement createMeasurement(Feature feature) {
@@ -68,9 +71,9 @@ public class TrackParserImpl implements TrackParser {
         Instant time = OffsetDateTime.parse(feature.getProperties().path(JsonConstants.TIME).textValue(),
                                             DateTimeFormatter.ISO_DATE_TIME).toInstant();
         JsonNode phenomenons = feature.getProperties().path(JsonConstants.PHENOMENONS);
-        BigDecimal speed = phenomenons.get(PHENOMENON_SPEED).path(JsonConstants.VALUE).decimalValue();
-        BigDecimal consumption = phenomenons.get(PHENOMENON_CONSUMPTION).path(JsonConstants.VALUE).decimalValue();
-        BigDecimal carbonDioxide = phenomenons.get(PHENOMENON_CARBON_DIOXIDE).path(JsonConstants.VALUE).decimalValue();
+        double speed = phenomenons.get(PHENOMENON_SPEED).path(JsonConstants.VALUE).doubleValue();
+        double consumption = phenomenons.get(PHENOMENON_CONSUMPTION).path(JsonConstants.VALUE).doubleValue();
+        double carbonDioxide = phenomenons.get(PHENOMENON_CARBON_DIOXIDE).path(JsonConstants.VALUE).doubleValue();
         return new Measurement(id, geometry, time, new Values(speed, consumption, carbonDioxide));
     }
 

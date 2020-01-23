@@ -26,12 +26,13 @@
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
  * for more details.
  */
-package org.envirocar.qad;
+package org.envirocar.meanspeed;
 
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
+import org.envirocar.meanspeed.database.PostgreSQLDatabase;
 import org.envirocar.meanspeed.mapmatching.MapMatchingResult;
 import org.envirocar.meanspeed.model.FeatureCollection;
 import org.envirocar.meanspeed.service.SegmentMetadataService;
@@ -40,6 +41,7 @@ import org.junit.runner.RunWith;
 import org.n52.jackson.datatype.jts.JtsModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -47,16 +49,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles("test")
 public class TrackCountServiceTest {
     
-	@Autowired	
-	SegmentMetadataService trackCountService;
+//	@Autowired	
+//	SegmentMetadataService trackCountService;
+
+	@Autowired
+	private PostgreSQLDatabase database;
 	
 	@Test
-	public void testTrackOcuntService() {
+	public void testTrackCountService() {
 				
 		MapMatchingResult matchedTrack = null;		
-        FeatureCollection features = null;	
+        FeatureCollection track = null;	
 		try {			
 			JtsModule jtsModule =  new JtsModule();
 						
@@ -67,19 +73,43 @@ public class TrackCountServiceTest {
 	                .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
 	                .registerModule(jtsModule);
 			
-//			String track = "track.json";
-//			String matched = "mapMatchingResult.json";
-			String track = "track_with_missing_speed_values.json";
-			String matched = "track_with_missing_speed_values_matched.json";
+			String trackName = "track.json";
+			String matchedTrackName = "mapMatchingResult.json";
+//			String trackName = "track_with_missing_speed_values.json";
+//			String matched = "track_with_missing_speed_values_matched.json";
 			
-			matchedTrack = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream(matched), MapMatchingResult.class);
+			matchedTrack = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream(matchedTrackName), MapMatchingResult.class);
 			
-			features = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream(track), FeatureCollection.class);
-			
+			track = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream(trackName), FeatureCollection.class);
+						
 		} catch (IOException e) {
 			fail(e.getMessage());
 		}
-		trackCountService.insertNewTrack(matchedTrack, features);
+		
+		SegmentMetadataService segmentMetadataService = new SegmentMetadataService(database);
+		
+		segmentMetadataService.insertNewTrack2(matchedTrack, track);
+		
+		
+//		Collection<OSMSegment> osmSegments = new OSMSegmentCreator().createOSMSSegments(matchedTrack, track);
+//				
+//		StopCalculator stopCalculator = new StopCalculator(new TrackParserImpl().createTrack(track));
+//		
+//		stopCalculator.calculateStops();
+//		
+//		System.out.println(stopCalculator.getStopCount());
+//		
+//		assertTrue(osmSegments != null);
+//		assertTrue(osmSegments.size() > 0);
+//				
+//		OSMSegmentStopCalculator osmSegmentStopCalculator = new OSMSegmentStopCalculator(osmSegments);
+//		
+//		osmSegmentStopCalculator.calculateStops();
+//		
+////		System.out.println(osmSegmentStopCalculator.getStopCount());
+//		
+//		
+////		trackCountService.insertNewTrack(matchedTrack, features);
 		
 	}
 	

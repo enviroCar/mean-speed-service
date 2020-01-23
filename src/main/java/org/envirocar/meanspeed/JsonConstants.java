@@ -53,6 +53,8 @@ public interface JsonConstants {
     String SEGMENT_LENGTH = "segmentLength";
     String TRAFFIC_LIGHT_INFLUENCE = "trafficLightInfluence";
     String TRAFFIC_LIGHT_ID = "trafficLightId";
+    String SENSOR = "sensor";
+    String PROPERTIES = "properties";
     String TRAVEL_TIME = "travelTime";
     String STOPS = "stops";
     String STOPPED_TIME = "stoppedTime";

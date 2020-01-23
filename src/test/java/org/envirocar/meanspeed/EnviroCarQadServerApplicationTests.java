@@ -26,7 +26,7 @@
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
  * for more details.
  */
-package org.envirocar.qad;
+package org.envirocar.meanspeed;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

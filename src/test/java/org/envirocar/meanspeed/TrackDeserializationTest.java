@@ -26,7 +26,7 @@
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
  * for more details.
  */
-package org.envirocar.qad;
+package org.envirocar.meanspeed;
 
 import static org.junit.Assert.assertTrue;
 
@@ -35,18 +35,12 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
-import org.envirocar.meanspeed.configuration.JacksonConfiguration;
-import org.envirocar.meanspeed.configuration.JtsConfiguration;
-import org.envirocar.meanspeed.configuration.KafkaConfiguration;
 import org.envirocar.meanspeed.kafka.KafkaJsonDeserializer;
 import org.envirocar.meanspeed.model.FeatureCollection;
+import org.envirocar.meanspeed.model.Track;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.n52.jackson.datatype.jts.JtsModule;
-import org.springframework.beans.factory.annotation.Autowire;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -73,14 +67,18 @@ public class TrackDeserializationTest {
 		
         StringWriter writer = new StringWriter();
         String encoding = StandardCharsets.UTF_8.name();
-        IOUtils.copy(getClass().getClassLoader().getResourceAsStream("tmp12148761520090307978.json"), writer, encoding);
-        		
+        IOUtils.copy(getClass().getClassLoader().getResourceAsStream("track.json"), writer, encoding);
+        
 		byte[] bytes = writer.toString().getBytes();
 		
 		FeatureCollection featureCollection = new KafkaJsonDeserializer<>(FeatureCollection.class, objectMapper).deserialize("", bytes);
 		
 		assertTrue(featureCollection != null);
 		
+		Track track = new TrackParserImpl().createTrack(featureCollection);
+		
+		assertTrue(track.getFuelType() != null);
+	
 	}
 	
 }

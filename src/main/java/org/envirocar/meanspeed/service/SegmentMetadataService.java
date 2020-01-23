@@ -29,6 +29,8 @@
 package org.envirocar.meanspeed.service;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.envirocar.meanspeed.database.PostgreSQLDatabase;
@@ -36,6 +38,11 @@ import org.envirocar.meanspeed.mapmatching.MapMatchingResult;
 import org.envirocar.meanspeed.mapmatching.MatchedPoint;
 import org.envirocar.meanspeed.model.Feature;
 import org.envirocar.meanspeed.model.FeatureCollection;
+import org.envirocar.meanspeed.model.Measurement;
+import org.envirocar.meanspeed.model.OSMSegment;
+import org.envirocar.meanspeed.model.Values;
+import org.envirocar.segmentmetadata.stopcalculation.OSMSegmentCreator;
+import org.envirocar.segmentmetadata.stopcalculation.OSMSegmentStopCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -64,7 +71,7 @@ public class SegmentMetadataService {
 		List<MatchedPoint> matchedPoints = matchedTrack.getMatchedPoints();
 		
 		List<Long> osmIDList = new ArrayList<Long>();
-		
+				
 		for (MatchedPoint matchedPoint : matchedPoints) {
 			Long osmID = matchedPoint.getOsmId();
 			String measurementID = null;
@@ -100,6 +107,79 @@ public class SegmentMetadataService {
 		
 	}
 	
+	public void insertNewTrack2(MapMatchingResult matchedTrack, FeatureCollection track) {
+		
+		List<Long> osmIDList = new ArrayList<Long>();
+		
+		Collection<OSMSegment> osmSegments = new OSMSegmentCreator().createOSMSSegments(matchedTrack, track);
+		
+		Iterator<OSMSegment> osmSegmentIterator = osmSegments.iterator();
+		
+		OSMSegmentStopCalculator osmSegmentStopCalculator = new OSMSegmentStopCalculator();
+		
+		while (osmSegmentIterator.hasNext()) {
+			OSMSegment osmSegment = (OSMSegment) osmSegmentIterator.next();
+
+			Long osmID = osmSegment.getId();
+			String measurementID = null;
+			double speed = -1d;
+			double co2 = -1d;
+			double consumption = -1d;
+			int stops = -1;
+			
+			List<Measurement> measurements = osmSegment.getMeasurements();
+			
+		    for (Measurement measurement : measurements) {
+				
+				measurementID = measurement.getId();
+				
+				Values values = measurement.getValues();
+				
+				try {
+					speed = values.getSpeed();
+					if(speed != -1d) {
+					    postgreSQLDatabase.updateSegmentSpeed(osmID, speed);
+					}
+				} catch (Exception e) {
+					LOG.error("Could not add measurement with id {} and speed {}.", measurementID, speed);
+				}
+				try {
+					co2 = values.getCarbonDioxide();
+					if(co2 != -1d) {
+					    postgreSQLDatabase.updateSegmentCo2(osmID, co2);
+					}
+				} catch (Exception e) {
+					LOG.error("Could not add measurement with id {} and co2 {}.", measurementID, co2);
+				}
+				try {
+				    consumption = values.getConsumption();
+					if(consumption != -1d) {
+						postgreSQLDatabase.updateSegmentConsumption(osmID, consumption);
+					}
+				} catch (Exception e) {
+					LOG.error("Could not add measurement with id {} and consumption {}.", measurementID, consumption);
+				}
+			}
+			
+		    try {
+				stops = osmSegmentStopCalculator.calculateStops(measurements);
+				if(stops > 0) {
+				    postgreSQLDatabase.updateSegmentStops(osmID, stops);
+				}
+			} catch (Exception e) {
+				LOG.error("Could not calculate stops add measurement with id {} and consumption {}.", measurementID, consumption);
+			}
+		    
+			if(osmIDList.contains(osmID)) {
+				continue;
+			}
+			postgreSQLDatabase.updateSegmentTrackCount(osmID);
+			osmIDList.add(osmID);
+			
+		}
+		
+	}
+	
 	private double getValue(String measurementID, FeatureCollection track, String valueName) {
 		
 		double result = -1d;
@@ -129,5 +209,4 @@ public class SegmentMetadataService {
 	public PostgreSQLDatabase getPostgreSQLDatabase() {
 		return postgreSQLDatabase;
 	}
-	
 }
