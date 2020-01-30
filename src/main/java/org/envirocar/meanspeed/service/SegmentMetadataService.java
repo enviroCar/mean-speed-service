@@ -74,6 +74,7 @@ public class SegmentMetadataService {
 				
 		for (MatchedPoint matchedPoint : matchedPoints) {
 			Long osmID = matchedPoint.getOsmId();
+			Long gId = matchedPoint.getGId();
 			String measurementID = null;
 			double speed = Double.NaN;
 			double co2 = Double.NaN;
@@ -81,19 +82,19 @@ public class SegmentMetadataService {
 			measurementID = matchedPoint.getMeasurementId();
 			try {
 				speed = getValue(measurementID, track, GPS_SPEED_NAME);
-				postgreSQLDatabase.updateSegmentSpeed(osmID, speed);
+				postgreSQLDatabase.updateSegmentSpeed(osmID, gId, speed);
 			} catch (Exception e) {
 				LOG.error("Could not add measurement with id {} and speed {}.", measurementID, speed);
 			}
 			try {
 				co2 = getValue(measurementID, track, CO2_NAME);
-				postgreSQLDatabase.updateSegmentCo2(osmID, co2);
+				postgreSQLDatabase.updateSegmentCo2(osmID, gId, co2);
 			} catch (Exception e) {
 				LOG.error("Could not add measurement with id {} and co2 {}.", measurementID, co2);
 			}
 			try {
 				consumption = getValue(measurementID, track, CONSUMPTION_NAME);
-				postgreSQLDatabase.updateSegmentConsumption(osmID, consumption);
+				postgreSQLDatabase.updateSegmentConsumption(osmID, gId, consumption);
 			} catch (Exception e) {
 				LOG.error("Could not add measurement with id {} and consumption {}.", measurementID, consumption);
 			}
@@ -101,7 +102,7 @@ public class SegmentMetadataService {
 			if(osmIDList.contains(osmID)) {
 				continue;
 			}
-			postgreSQLDatabase.updateSegmentTrackCount(osmID);
+			postgreSQLDatabase.updateSegmentTrackCount(osmID, gId);
 			osmIDList.add(osmID);
 		}
 		
@@ -109,7 +110,7 @@ public class SegmentMetadataService {
 	
 	public void insertNewTrack2(MapMatchingResult matchedTrack, FeatureCollection track) {
 		
-		List<Long> osmIDList = new ArrayList<Long>();
+		List<String> osmIDList = new ArrayList<String>();
 		
 		Collection<OSMSegment> osmSegments = new OSMSegmentCreator().createOSMSSegments(matchedTrack, track);
 		
@@ -121,6 +122,8 @@ public class SegmentMetadataService {
 			OSMSegment osmSegment = (OSMSegment) osmSegmentIterator.next();
 
 			Long osmID = osmSegment.getId();
+			Long gId = osmSegment.getGId();
+			String full_Id = osmID + "_" + gId;
 			String measurementID = null;
 			double speed = -1d;
 			double co2 = -1d;
@@ -138,7 +141,7 @@ public class SegmentMetadataService {
 				try {
 					speed = values.getSpeed();
 					if(speed != -1d) {
-					    postgreSQLDatabase.updateSegmentSpeed(osmID, speed);
+					    postgreSQLDatabase.updateSegmentSpeed(osmID, gId, speed);
 					}
 				} catch (Exception e) {
 					LOG.error("Could not add measurement with id {} and speed {}.", measurementID, speed);
@@ -146,7 +149,7 @@ public class SegmentMetadataService {
 				try {
 					co2 = values.getCarbonDioxide();
 					if(co2 != -1d) {
-					    postgreSQLDatabase.updateSegmentCo2(osmID, co2);
+					    postgreSQLDatabase.updateSegmentCo2(osmID, gId, co2);
 					}
 				} catch (Exception e) {
 					LOG.error("Could not add measurement with id {} and co2 {}.", measurementID, co2);
@@ -154,7 +157,7 @@ public class SegmentMetadataService {
 				try {
 				    consumption = values.getConsumption();
 					if(consumption != -1d) {
-						postgreSQLDatabase.updateSegmentConsumption(osmID, consumption);
+						postgreSQLDatabase.updateSegmentConsumption(osmID, gId, consumption);
 					}
 				} catch (Exception e) {
 					LOG.error("Could not add measurement with id {} and consumption {}.", measurementID, consumption);
@@ -164,17 +167,17 @@ public class SegmentMetadataService {
 		    try {
 				stops = osmSegmentStopCalculator.calculateStops(measurements);
 				if(stops > 0) {
-				    postgreSQLDatabase.updateSegmentStops(osmID, stops);
+				    postgreSQLDatabase.updateSegmentStops(osmID, gId, stops);
 				}
 			} catch (Exception e) {
 				LOG.error("Could not calculate stops add measurement with id {} and consumption {}.", measurementID, consumption);
 			}
 		    
-			if(osmIDList.contains(osmID)) {
+			if(osmIDList.contains(full_Id)) {
 				continue;
 			}
-			postgreSQLDatabase.updateSegmentTrackCount(osmID);
-			osmIDList.add(osmID);
+			postgreSQLDatabase.updateSegmentTrackCount(osmID, gId);
+			osmIDList.add(full_Id);
 			
 		}
 		

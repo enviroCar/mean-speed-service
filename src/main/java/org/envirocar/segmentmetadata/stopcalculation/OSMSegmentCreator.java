@@ -36,16 +36,18 @@ public class OSMSegmentCreator {
 	
 	public Collection<OSMSegment> createOSMSSegments(MapMatchingResult matchedTrack, FeatureCollection track){
 		
-		Map<Long, OSMSegment> result = new HashMap<>();
+		Map<String, OSMSegment> result = new HashMap<>();
 		
 		List<MatchedPoint> matchedPoints = matchedTrack.getMatchedPoints();
 		
-		List<Long> osmIDList = new ArrayList<Long>();
+		List<String> osmIDList = new ArrayList<String>();
 		
 		OSMSegment osmSegment;
 		
 		for (MatchedPoint matchedPoint : matchedPoints) {
 			Long osmID = matchedPoint.getOsmId();
+			Long gId = matchedPoint.getGId();
+			String full_Id = osmID + "_" + gId;
 			String measurementID = null;
 			double speed = -1d;
 			double co2 = -1d;
@@ -83,14 +85,14 @@ public class OSMSegmentCreator {
 				}
 			}
 			
-			if(osmIDList.contains(osmID)) {
-				osmSegment = result.get(osmID);				
+			if(osmIDList.contains(full_Id)) {
+				osmSegment = result.get(full_Id);
 			} else {
-				osmSegment = new OSMSegment(osmID);
-				osmIDList.add(osmID);
+				osmSegment = new OSMSegment(osmID, gId);
+				osmIDList.add(full_Id);
 			}
 			osmSegment.addMeasurement(new Measurement(measurementID, (Point) matchedPoint.getUnmatchedPoint().getGeometry(), time, new Values(speed, consumption, co2)));
-			result.put(osmID, osmSegment);
+			result.put(full_Id, osmSegment);
 		}
 		
 		return result.values();

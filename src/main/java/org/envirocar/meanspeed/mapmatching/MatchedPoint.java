@@ -92,11 +92,13 @@ public class MatchedPoint {
         this.pointOnRoad = pointOnRoad;
     }
 
-	public Long getId() {
+    @JsonGetter(JsonConstants.ID)
+	public Long getGId() {
 		return id;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+    @JsonSetter(JsonConstants.ID)
+	public void setGId(Long gId) {
+		this.id = gId;
 	}
 }
