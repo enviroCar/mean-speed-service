@@ -40,6 +40,7 @@ public class MatchedPoint {
     private String streetName;
     private Feature unmatchedPoint;
     private Feature pointOnRoad;
+    private Long id;
 
     @JsonGetter(JsonConstants.OSM_ID)
     public Long getOsmId() {
@@ -90,4 +91,12 @@ public class MatchedPoint {
     public void setPointOnRoad(Feature pointOnRoad) {
         this.pointOnRoad = pointOnRoad;
     }
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
 }

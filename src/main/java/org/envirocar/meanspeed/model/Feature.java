@@ -28,6 +28,7 @@
  */
 package org.envirocar.meanspeed.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -44,6 +45,9 @@ public class Feature {
     private Geometry geometry;
     @JsonProperty("properties")
     private ObjectNode properties;
+    @JsonProperty("envelope")
+    @JsonIgnore(true)
+    private Envelope envelope;
 
     public String getId() {
         return id;
